@@ -1,48 +1,96 @@
-const express = require("express");
-const nodemailer = require("nodemailer");
-const cors = require("cors");
-const dotenv = require("dotenv");
+// Import required modules
+import express from "express";
+import nodemailer from "nodemailer";
+import cors from "cors";
+import dotenv from "dotenv";
 
+// Load environment variables from .env file
 dotenv.config();
 
+// Create an express app
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Middleware setup
+app.use(cors()); // Allow CORS
+app.use(express.json()); // Parse JSON requests
 
-// Configure the email transporter
+// Configure the email transporter using nodemailer
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: "gmail", // Gmail service
   auth: {
-    user: process.env.EMAIL, // Use environment variables for security
-    pass: process.env.PASSWORD,
+    user: process.env.EMAIL, // Your email (loaded from .env)
+    pass: process.env.PASSWORD, // Your generated app password (loaded from .env)
   },
 });
 
-// Handle the incoming POST request from the contact form
+// Handle POST request from the contact form to send the email
 app.post("/send-email", (req, res) => {
   const { name, email, message } = req.body;
 
+  // Email to admin
   const mailOptionsAdmin = {
-    from: email,
-    to: process.env.EMAIL,
-    subject: `New message from ${name}`,
-    html: `<p>${message}</p>`,
+    from: email, // From the user's email
+    to: process.env.EMAIL, // Admin's email
+    subject: `New message from ${name}`, // Subject of the email
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <h2 style="color: #2c3e50;">New Message from ${name}</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong></p>
+        <p style="background-color: #ecf0f1; padding: 10px; border-radius: 5px;">${message}</p>
+        <hr />
+        <p style="font-size: 12px; color: #7f8c8d;">This message was sent via your website's contact form.</p>
+      </div>
+    `,
   };
 
+  // Email to user (confirmation)
+  const mailOptionsUser = {
+    from: process.env.EMAIL, // Your email
+    to: email, // User's email
+    subject: "Thank you for your message!", // Confirmation subject
+    html: `
+      <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; color: #333;">
+        <div style="background-color: #2c3e50; color: white; padding: 10px; border-radius: 5px;">
+          <h2 style="margin: 0;">Thank you for your message, ${name}!</h2>
+        </div>
+        <p style="font-size: 16px; margin-top: 20px;">Hello ${name},</p>
+        <p style="font-size: 16px;">Thank you for reaching out to us. We have received your message and will get back to you as soon as possible.</p>
+        <p style="font-size: 16px; font-weight: bold;">Your message:</p>
+        <p style="background-color: #ecf0f1; padding: 10px; border-radius: 5px; font-style: italic;">${message}</p>
+        <p style="font-size: 16px;">We appreciate your interest in our services!</p>
+        <p style="font-size: 16px;">Best regards,<br>Kannan M</p>
+        <hr />
+        <p style="font-size: 12px; color: #7f8c8d;">This is an automated confirmation message.</p>
+      </div>
+    `,
+  };
+
+  // Send email to admin
   transporter.sendMail(mailOptionsAdmin, (error) => {
     if (error) {
-      return res.status(500).json({
+      return res.json({
         success: false,
         message: "Failed to send email. Please try again.",
       });
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Message sent successfully!",
+    // After sending email to admin, send the confirmation to the user
+    transporter.sendMail(mailOptionsUser, (error) => {
+      if (error) {
+        return res.json({
+          success: false,
+          message: "Failed to send confirmation email. Please try again.",
+        });
+      }
+
+      // Return success response
+      res.json({
+        success: true,
+        message: "Message sent successfully and confirmation email sent!",
+      });
     });
   });
 });
