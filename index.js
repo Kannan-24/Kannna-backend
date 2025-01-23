@@ -36,36 +36,39 @@ app.post("/send-email", async (req, res) => {
         to: "kannanmuruganandham1@gmail.com",
         subject: `New message from ${name}`,
         html: `
-            <div style="font-family: Arial, sans-serif; color: #333;">
-                <h2 style="color: #2c3e50;">New Message from ${name}</h2>
-                <p><strong>Name:</strong> ${name}</p>
-                <p><strong>Email:</strong> ${email}</p>
-                <p><strong>Message:</strong></p>
-                <p style="background-color: #ecf0f1; padding: 10px; border-radius: 5px;">${message}</p>
-                <hr />
-                <p style="font-size: 12px; color: #7f8c8d;">This message was sent via your website's contact form.</p>
-            </div>
-        `,
+                        <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+                                <h2 style="color: #2c3e50; margin: 0;">New Message from ${name}</h2>
+                                <hr style="border: 1px solid #ecf0f1; margin: 20px 0;" />
+                                <p><strong>Name:</strong> ${name}</p>
+                                <p><strong>Email:</strong> ${email}</p>
+                                <p><strong>Message:</strong></p>
+                                <p style="background-color: #ecf0f1; padding: 10px; border-radius: 5px;">${message}</p>
+                                <hr />
+                                <p style="font-size: 12px; color: #7f8c8d;">This message was sent via your portfolio website's contact form.</p>
+                        </div>
+                `,
     };
 
     // Email to user (confirmation)
     const mailOptionsUser = {
         from: `"Kannan M" <kannanmuruganandham1@gmail.com>`,
         to: email,
-        subject: "Thank you for your message!",
+        subject: "Thank you for contacting me!",
         html: `
-            <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; color: #333;">
-                <h2 style="background-color: #2c3e50; color: white; padding: 10px; border-radius: 5px;">Thank you for your message, ${name}!</h2>
-                <p style="font-size: 16px; margin-top: 20px;">Hello ${name},</p>
-                <p style="font-size: 16px;">Thank you for reaching out to us. We have received your message and will get back to you as soon as possible.</p>
-                <p style="font-size: 16px; font-weight: bold;">Your message:</p>
-                <p style="background-color: #ecf0f1; padding: 10px; border-radius: 5px; font-style: italic;">${message}</p>
-                <p style="font-size: 16px;">We appreciate your interest in our services!</p>
-                <p style="font-size: 16px;">Best regards,<br>Kannan M</p>
-                <hr />
-                <p style="font-size: 12px; color: #7f8c8d;">This is an automated confirmation message.</p>
-            </div>
-        `,
+                        <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; color: #333;">
+                                <h2 style="margin: 10px 0 0; color: #2c3e50;">Kannan M</h2>
+                                <p style="color: #7f8c8d; font-size: 14px;">Full-Stack Developer | Portfolio Website</p>
+                                <hr style="border: 1px solid #ecf0f1;" />
+                                <p style="font-size: 16px; margin-top: 20px;">Hello ${name},</p>
+                                <p style="font-size: 16px;">Thank you for reaching out to me through my portfolio website. I have received your message and will get back to you as soon as possible.</p>
+                                <p style="font-size: 16px; font-weight: bold;">Your message:</p>
+                                <p style="background-color: #ecf0f1; padding: 10px; border-radius: 5px; font-style: italic;">${message}</p>
+                                <p style="font-size: 16px;">I appreciate your interest in my work!</p>
+                                <p style="font-size: 16px;">Best regards,<br>Kannan M</p>
+                                <hr />
+                                <p style="text-align: center; font-size: 12px; color: #7f8c8d;">This is an automated confirmation message.</p>
+                        </div>
+                `,
     };
 
     try {
