@@ -1,9 +1,19 @@
 import express from "express";
 import nodemailer from "nodemailer";
 import cors from "cors";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
+const emailUser = process.env.EMAIL_USER;
+const emailPass = process.env.EMAIL_PASS;
+const receiverEmail = process.env.RECEIVER_EMAIL || emailUser;
+
+if (!emailUser || !emailPass) {
+    throw new Error("Missing EMAIL_USER or EMAIL_PASS in environment variables.");
+}
 
 // Middleware
 app.use(cors());
@@ -13,8 +23,8 @@ app.use(express.json());
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-        user: "kannanmuruganandham1@gmail.com", // Your email
-        pass: "crqpojrgiidbckcn", // Your generated app password
+        user: emailUser,
+        pass: emailPass,
     },
 });
 
@@ -32,8 +42,8 @@ app.post("/send-email", async (req, res) => {
 
     // Email to admin
     const mailOptionsAdmin = {
-        from: `"Kannan M" <kannanmuruganandham1@gmail.com>`,
-        to: "kannanmuruganandham1@gmail.com",
+        from: `"Kannan M" <${emailUser}>`,
+        to: receiverEmail,
         subject: `New message from ${name}`,
         html: `
                         <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
@@ -51,7 +61,7 @@ app.post("/send-email", async (req, res) => {
 
     // Email to user (confirmation)
     const mailOptionsUser = {
-        from: `"Kannan M" <kannanmuruganandham1@gmail.com>`,
+        from: `"Kannan M" <${emailUser}>`,
         to: email,
         subject: "Thank you for contacting me!",
         html: `
