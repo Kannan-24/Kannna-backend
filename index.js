@@ -93,9 +93,15 @@ app.post("/send-email", async (req, res) => {
             message: "Message sent successfully and confirmation email sent!",
         });
     } catch (error) {
+        console.error("========== EMAIL ERROR ==========");
+        console.error(error);
+        console.error("Message:", error.message);
+        console.error("Stack:", error.stack);
+        console.error("=================================");
+    
         res.status(500).json({
             success: false,
-            message: "Failed to send email. Please try again.",
+            message: error.message,
         });
     }
 });
