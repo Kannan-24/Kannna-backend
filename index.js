@@ -7,8 +7,6 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
-
-// Environment Variables
 const emailUser = process.env.EMAIL_USER;
 const emailPass = process.env.EMAIL_PASS;
 const receiverEmail = process.env.RECEIVER_EMAIL || emailUser;
@@ -18,23 +16,10 @@ if (!emailUser || !emailPass) {
 }
 
 // Middleware
-app.use(cors({
-    origin: "*",
-}));
-
+app.use(cors());
 app.use(express.json());
 
-// Health Check
-app.get("/", (req, res) => {
-    res.json({
-        success: true,
-        message: "Backend is running successfully 🚀",
-        emailUser,
-        receiverEmail,
-    });
-});
-
-// Configure Nodemailer
+// Configure Nodemailer transporter
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -43,133 +28,79 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-// Verify SMTP Connection
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("==================================");
-        console.error("SMTP VERIFY FAILED");
-        console.error(error);
-        console.error("==================================");
-    } else {
-        console.log("==================================");
-        console.log("SMTP SERVER IS READY");
-        console.log("==================================");
-    }
-});
-
-// Send Email API
+// Handle POST request for sending email
 app.post("/send-email", async (req, res) => {
-
-    console.log("Incoming Request:");
-    console.log(req.body);
-
     const { name, email, message } = req.body;
 
+    // Email validation
     if (!name || !email || !message) {
         return res.status(400).json({
             success: false,
-            message: "Name, email and message are required.",
+            message: "Name, email, and message are required.",
         });
     }
 
+    // Email to admin
     const mailOptionsAdmin = {
-        from: `"Portfolio Contact" <${emailUser}>`,
+        from: `"Kannan M" <${emailUser}>`,
         to: receiverEmail,
         subject: `New message from ${name}`,
         html: `
-            <h2>New Portfolio Contact</h2>
-
-            <p><b>Name:</b> ${name}</p>
-            <p><b>Email:</b> ${email}</p>
-            <p><b>Message:</b></p>
-
-            <p>${message}</p>
-        `,
+                        <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+                                <h2 style="color: #2c3e50; margin: 0;">New Message from ${name}</h2>
+                                <hr style="border: 1px solid #ecf0f1; margin: 20px 0;" />
+                                <p><strong>Name:</strong> ${name}</p>
+                                <p><strong>Email:</strong> ${email}</p>
+                                <p><strong>Message:</strong></p>
+                                <p style="background-color: #ecf0f1; padding: 10px; border-radius: 5px;">${message}</p>
+                                <hr />
+                                <p style="font-size: 12px; color: #7f8c8d;">This message was sent via your portfolio website's contact form.</p>
+                        </div>
+                `,
     };
 
+    // Email to user (confirmation)
     const mailOptionsUser = {
         from: `"Kannan M" <${emailUser}>`,
         to: email,
         subject: "Thank you for contacting me!",
         html: `
-            <h2>Hello ${name},</h2>
-
-            <p>
-                Thank you for contacting me through my portfolio website.
-            </p>
-
-            <p>
-                I have received your message and will get back to you soon.
-            </p>
-
-            <hr>
-
-            <p><b>Your Message:</b></p>
-
-            <p>${message}</p>
-
-            <br>
-
-            <p>
-                Regards,
-                <br>
-                Kannan M
-            </p>
-        `,
+                        <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; color: #333;">
+                                <h2 style="margin: 10px 0 0; color: #2c3e50;">Kannan M</h2>
+                                <p style="color: #7f8c8d; font-size: 14px;">Full-Stack Developer | Portfolio Website</p>
+                                <hr style="border: 1px solid #ecf0f1;" />
+                                <p style="font-size: 16px; margin-top: 20px;">Hello ${name},</p>
+                                <p style="font-size: 16px;">Thank you for reaching out to me through my portfolio website. I have received your message and will get back to you as soon as possible.</p>
+                                <p style="font-size: 16px; font-weight: bold;">Your message:</p>
+                                <p style="background-color: #ecf0f1; padding: 10px; border-radius: 5px; font-style: italic;">${message}</p>
+                                <p style="font-size: 16px;">I appreciate your interest in my work!</p>
+                                <p style="font-size: 16px;">Best regards,<br>Kannan M</p>
+                                <hr />
+                                <p style="text-align: center; font-size: 12px; color: #7f8c8d;">This is an automated confirmation message.</p>
+                        </div>
+                `,
     };
 
     try {
+        // Send email to admin
+        await transporter.sendMail(mailOptionsAdmin);
 
-        console.log("Sending admin email...");
+        // Send confirmation email to user
+        await transporter.sendMail(mailOptionsUser);
 
-        const adminInfo = await transporter.sendMail(mailOptionsAdmin);
-
-        console.log("Admin email sent.");
-        console.log(adminInfo);
-
-        console.log("Sending confirmation email...");
-
-        const userInfo = await transporter.sendMail(mailOptionsUser);
-
-        console.log("Confirmation email sent.");
-        console.log(userInfo);
-
-        return res.status(200).json({
+        res.json({
             success: true,
-            message: "Emails sent successfully.",
+            message: "Message sent successfully and confirmation email sent!",
         });
-
     } catch (error) {
-
-        console.error("==================================");
-        console.error("EMAIL SEND FAILED");
-        console.error(error);
-        console.error("Message:", error.message);
-        console.error("Stack:", error.stack);
-        console.error("==================================");
-
-        return res.status(500).json({
+        res.status(500).json({
             success: false,
-            message: error.message,
+            message: "Failed to send email. Please try again.",
         });
-
     }
-
 });
 
-// 404 Handler
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: "Route not found",
-    });
-});
-
-// Start Server
+// Start the server
 app.listen(port, () => {
-    console.log("==================================");
-    console.log(`Server running on port ${port}`);
-    console.log(`Email User : ${emailUser}`);
-    console.log(`Receiver   : ${receiverEmail}`);
-    console.log("==================================");
+    console.log(`Server running on http://localhost:${port}`);
 });
